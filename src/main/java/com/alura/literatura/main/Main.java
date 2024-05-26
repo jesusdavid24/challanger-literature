@@ -7,7 +7,6 @@ import com.alura.literatura.model.Data;
 import com.alura.literatura.repository.BookRepository;
 import com.alura.literatura.service.ApiConnector;
 import com.alura.literatura.service.DataConverter;
-import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.util.Scanner;
@@ -19,6 +18,7 @@ public class Main {
   public static final String BASE_URL = "https://gutendex.com/books";
   private BookRepository repository;
   private List<Book> book;
+  private List<Authors> authors;
 
   public Main(BookRepository repository) {
     this.repository = repository;
@@ -51,6 +51,9 @@ public class Main {
         case 2:
           searchAllBook();
           break;
+        case 3:
+          listAuthors();
+          break;
         default:
           System.out.println("Option invalid");
       }
@@ -80,7 +83,13 @@ public class Main {
 
    private void searchAllBook() {
     book = repository.findAllBook();
-    book.forEach(b -> System.out.printf("Title: %s - Authors: %s - Languages: %s - DownloadCount: %n\n",
+    book.forEach(b -> System.out.printf("Title: %s - Authors: %s - Languages: %s - DownloadCount: %s\n",
       b.getTitle(), b.getAuthors(), b.getLanguages(), b.getDownloadCount()));
+  }
+
+  private void listAuthors() {
+    authors = repository.findAllAuthors();
+    authors.forEach(a -> System.out.printf("Name: %s - BirthYear: %s - DeathYear: %s\n",
+      a.getName(), a.getBirthYear(), a.getDeathYear()));
   }
 }
