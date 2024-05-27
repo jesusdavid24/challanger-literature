@@ -6,9 +6,11 @@ import com.alura.literatura.model.Language;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
   @Query("SELECT b FROM Book b JOIN FETCH b.authors JOIN FETCH b.languages")
   List<Book> findAllBook();
@@ -17,7 +19,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
   @Query("SELECT a FROM Authors a LEFT JOIN FETCH a.books WHERE a.birthYear <= :yearLive " +
     "AND (a.deathYear IS NULL OR a.deathYear >= :yearLive)")
   List<Authors> findAuthorsAliveInYear(@Param("yearLive") int yearLive);
-  @Query("SELECT b FROM Book b JOIN b.languages lang WHERE lang = :language")
+  @Query("SELECT b FROM Book b JOIN FETCH b.authors JOIN FETCH b.languages lang WHERE lang = :language")
   List<Book> findBookByLanguage(@Param("language") Language language);
 
 }

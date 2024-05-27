@@ -1,13 +1,14 @@
 package com.alura.literatura.dto;
 
 import com.alura.literatura.model.Authors;
+import com.alura.literatura.model.Language;
 
 import java.util.List;
+import java.util.Set;
 
 public record BookDTO(
-  Long id,
   String title,
-  List<Authors> authors,
-  List<String> languages,
+  Set<Authors> authors,
+  List<Language> languages,
   int downloadCount
 ) {}

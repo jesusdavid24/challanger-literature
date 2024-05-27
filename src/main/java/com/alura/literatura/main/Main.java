@@ -58,20 +58,23 @@ public class Main {
         case 5:
           listBooksByLanguage();
           break;
+        case 0:
+          System.out.println("Closing application");
+          break;
         default:
           System.out.println("Option invalid");
       }
     }
   }
- private BookData findBook() {
-  System.out.println("Type in the name of the book you wish to search for.");
-  String bookName = scanner.nextLine();
-  String json = apiConnector.fetchData(BASE_URL + "?search=" + bookName.replace(" ", "+"));
-  Data dataSearch = dataConverter.getData(json, Data.class);
-  return dataSearch.results().stream()
-    .filter(l -> l.title().toUpperCase().contains(bookName.toUpperCase()))
-    .findFirst()
-    .orElse(null);
+  private BookData findBook() {
+    System.out.println("Type in the name of the book you wish to search for.");
+    String bookName = scanner.nextLine();
+    String json = apiConnector.fetchData(BASE_URL + "?search=" + bookName.replace(" ", "+"));
+    Data dataSearch = dataConverter.getData(json, Data.class);
+    return dataSearch.results().stream()
+      .filter(l -> l.title().toUpperCase().contains(bookName.toUpperCase()))
+      .findFirst()
+      .orElse(null);
   }
 
   private void searchBook() {
@@ -85,7 +88,7 @@ public class Main {
     System.out.println(data);
   }
 
-   private void searchAllBook() {
+  private void searchAllBook() {
     book = repository.findAllBook();
     book.forEach(b -> System.out.printf("Title: %s - Authors: %s - Languages: %s - DownloadCount: %s\n",
       b.getTitle(), b.getAuthors(), b.getLanguages(), b.getDownloadCount()));
