@@ -14,7 +14,7 @@ public class Authors {
   private String name;
   private String birthYear;
   private String deathYear;
-  @ManyToMany(mappedBy = "authors", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @ManyToMany(mappedBy = "authors", cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
   private List<Book> books;
 
   public Authors(String name, String birthYear, String deathYear) {

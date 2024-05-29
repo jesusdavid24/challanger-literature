@@ -9,5 +9,5 @@ import java.util.Optional;
 
 public interface AuthorRepository extends JpaRepository<Authors, Long> {
   @Query("SELECT a FROM Authors a WHERE a.name = :name")
-  Optional<Authors> findAuthorsByName(@Param("name") String name);
+  Optional<Authors> findAuthorByName(@Param("name") String name);
 }

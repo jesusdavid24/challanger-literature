@@ -7,6 +7,7 @@ import com.alura.literatura.service.ApiConnector;
 import com.alura.literatura.service.DataConverter;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,7 +50,7 @@ public class Main {
 
       switch (option) {
         case 1:
-          searchBook();
+          saveBook();
           break;
         case 2:
           searchAllBook();
@@ -71,7 +72,7 @@ public class Main {
       }
     }
   }
-  private BookData findBook() {
+  private BookData searchBook() {
     System.out.println("Type in the name of the book you wish to search for.");
     String bookName = scanner.nextLine();
     String json = apiConnector.fetchData(BASE_URL + "?search=" + bookName.replace(" ", "+"));
@@ -81,16 +82,12 @@ public class Main {
       .findFirst()
       .orElse(null);
   }
-
-  private void searchBook() {
-    BookData data = findBook();
-    Optional<Book> existBook = repository.findBookByTitle(data.title());
+  private void saveBook() {
+    BookData data = searchBook();
+    Optional<Book> existingBook = repository.findBookByTitle(data.title());
     //var existAuthor = authorRepository.findAuthorsByName(data.authors().toString());
-    if (existBook.isPresent()) {
-      List<String> bookTitle = existBook.stream()
-        .map(b -> b.getTitle())
-        .collect(Collectors.toList());
-      System.out.println("Book already exists in the database" + bookTitle);
+    if (existingBook.isPresent()) {
+      System.out.println("Book already exists in the database: " + existingBook.get().getTitle());
     } else {
       Book book = new Book(data);
       data.authors().forEach(authorData -> {
@@ -101,8 +98,6 @@ public class Main {
       System.out.println(data);
     }
   }
-
-
 
   private void searchAllBook() {
     book = repository.findAllBook();
