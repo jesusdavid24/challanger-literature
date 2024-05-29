@@ -2,6 +2,7 @@ package com.alura.literatura.model;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ public class Book {
     this.title = bookData.title();
     this.languages = bookData.languages().stream().map(Language::fromCode).collect(Collectors.toList());
     this.downloadCount = bookData.downloadCount();
+    this.authors = new HashSet<>();
   }
 
   public Book() {}

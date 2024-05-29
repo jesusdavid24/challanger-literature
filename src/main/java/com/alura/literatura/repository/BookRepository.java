@@ -9,9 +9,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
+  @Query("SELECT b FROM Book b WHERE b.title = :titleBook")
+  Optional<Book> findBookByTitle(@Param("titleBook") String titleBook);
   @Query("SELECT b FROM Book b JOIN FETCH b.authors JOIN FETCH b.languages")
   List<Book> findAllBook();
   @Query("SELECT a FROM Authors a LEFT JOIN FETCH a.books")

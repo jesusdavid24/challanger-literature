@@ -1,6 +1,7 @@
 package com.alura.literatura;
 
 import com.alura.literatura.main.Main;
+import com.alura.literatura.repository.AuthorRepository;
 import com.alura.literatura.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -11,6 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class LiteraturaApplication implements CommandLineRunner {
 	@Autowired
 	private BookRepository repository;
+	@Autowired
+	private AuthorRepository authorRepository;
 	public static void main(String[] args) {
 		SpringApplication.run(LiteraturaApplication.class, args);
 	}
@@ -18,7 +21,7 @@ public class LiteraturaApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		Main main = new Main(repository);
+		Main main = new Main(repository, authorRepository);
 		main.showMenu();
 	}
 }

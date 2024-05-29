@@ -8,4 +8,6 @@ public record AuthorsData(
  String name,
  @JsonAlias("birth_year") String birthYear,
  @JsonAlias("death_year") String deathYear
-) {}
+) {
+
+}

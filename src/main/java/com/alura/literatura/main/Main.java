@@ -1,25 +1,30 @@
 package com.alura.literatura.main;
 
 import com.alura.literatura.model.*;
+import com.alura.literatura.repository.AuthorRepository;
 import com.alura.literatura.repository.BookRepository;
 import com.alura.literatura.service.ApiConnector;
 import com.alura.literatura.service.DataConverter;
+import org.hibernate.Hibernate;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@Component
 public class Main {
   private ApiConnector apiConnector = new ApiConnector();
   private DataConverter dataConverter = new DataConverter();
   private Scanner scanner = new Scanner(System.in);
   public static final String BASE_URL = "https://gutendex.com/books";
   private BookRepository repository;
+  private AuthorRepository authorRepository;
   private List<Book> book;
   private List<Authors> authors;
 
-  public Main(BookRepository repository) {
+  public Main(BookRepository repository, AuthorRepository authorRepository) {
     this.repository = repository;
+    this.authorRepository = authorRepository;
   }
 
   public void showMenu() {
@@ -79,14 +84,25 @@ public class Main {
 
   private void searchBook() {
     BookData data = findBook();
-    Book book = new Book(data);
-    data.authors().forEach(authorData -> {
-      Authors author = new Authors(authorData.name(), authorData.birthYear(), authorData.deathYear());
-      book.getAuthors().add(author);
-    });
-    repository.save(book);
-    System.out.println(data);
+    Optional<Book> existBook = repository.findBookByTitle(data.title());
+    //var existAuthor = authorRepository.findAuthorsByName(data.authors().toString());
+    if (existBook.isPresent()) {
+      List<String> bookTitle = existBook.stream()
+        .map(b -> b.getTitle())
+        .collect(Collectors.toList());
+      System.out.println("Book already exists in the database" + bookTitle);
+    } else {
+      Book book = new Book(data);
+      data.authors().forEach(authorData -> {
+        Authors author = new Authors(authorData.name(), authorData.birthYear(), authorData.deathYear());
+        book.getAuthors().add(author);
+      });
+      repository.save(book);
+      System.out.println(data);
+    }
   }
+
+
 
   private void searchAllBook() {
     book = repository.findAllBook();
