@@ -5,9 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface AuthorRepository extends JpaRepository<Authors, Long> {
-  @Query("SELECT a FROM Authors a WHERE a.name = :name")
-  Optional<Authors> findAuthorByName(@Param("name") String name);
+  @Query("SELECT a FROM Authors a WHERE LOWER(a.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+  List<Authors> findAuthorsByName(@Param("name") String name);
 }

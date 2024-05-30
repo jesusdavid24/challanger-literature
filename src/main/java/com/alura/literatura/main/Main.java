@@ -42,6 +42,7 @@ public class Main {
         3 - List registered authors
         4 - List living authors in a given year
         5 - List book by language
+        6 - Search authors by name
         0 - Exit
         """;
       System.out.println(menu);
@@ -64,6 +65,9 @@ public class Main {
         case 5:
           listBooksByLanguage();
           break;
+        case 6:
+          searchAuthorsByName();
+          break;
         case 0:
           System.out.println("Closing application");
           break;
@@ -85,10 +89,15 @@ public class Main {
   private void saveBook() {
     BookData data = searchBook();
     Optional<Book> existingBook = repository.findBookByTitle(data.title());
-    //var existAuthor = authorRepository.findAuthorsByName(data.authors().toString());
     if (existingBook.isPresent()) {
       System.out.println("Book already exists in the database: " + existingBook.get().getTitle());
-    } else {
+    }
+
+//    Optional<Authors> author = authorRepository.findAuthorByName(data.authors().toString());
+//    Book book = new Book(bookData);
+
+
+    else {
       Book book = new Book(data);
       data.authors().forEach(authorData -> {
         Authors author = new Authors(authorData.name(), authorData.birthYear(), authorData.deathYear());
@@ -99,6 +108,18 @@ public class Main {
     }
   }
 
+  private void searchAuthorsByName() {
+    System.out.println("Enter name of author");
+    var nameAuthor = scanner.nextLine().trim();
+
+    List<Authors> authors = authorRepository.findAuthorsByName(nameAuthor);
+    if (!authors.isEmpty()) {
+      Authors author = authors.get(0);
+      System.out.println(author.getName());
+    } else {
+      System.out.println("Authors not found");
+    }
+  }
   private void searchAllBook() {
     book = repository.findAllBook();
     book.forEach(b -> System.out.printf("Title: %s - Authors: %s - Languages: %s - DownloadCount: %s\n",
