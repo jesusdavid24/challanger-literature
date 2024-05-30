@@ -3,6 +3,7 @@ package com.alura.literatura.repository;
 import com.alura.literatura.model.Authors;
 import com.alura.literatura.model.Book;
 import com.alura.literatura.model.Language;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,5 +25,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
   List<Authors> findAuthorsAliveInYear(@Param("yearLive") int yearLive);
   @Query("SELECT b FROM Book b JOIN FETCH b.authors JOIN FETCH b.languages lang WHERE lang = :language")
   List<Book> findBookByLanguage(@Param("language") Language language);
+  @Query("SELECT b FROM Book b WHERE b.downloadCount > 0 ORDER BY b.downloadCount DESC")
+  List<Book> findBooksOrderedByDownloadCount( Pageable pageable);
 
 }

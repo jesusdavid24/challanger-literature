@@ -5,12 +5,14 @@ import com.alura.literatura.repository.AuthorRepository;
 import com.alura.literatura.repository.BookRepository;
 import com.alura.literatura.service.ApiConnector;
 import com.alura.literatura.service.DataConverter;
-import org.hibernate.Hibernate;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 public class Main {
@@ -22,6 +24,8 @@ public class Main {
   private AuthorRepository authorRepository;
   private List<Book> book;
   private List<Authors> authors;
+  @PersistenceContext
+  private EntityManager entityManager;
 
   public Main(BookRepository repository, AuthorRepository authorRepository) {
     this.repository = repository;
@@ -43,6 +47,7 @@ public class Main {
         4 - List living authors in a given year
         5 - List book by language
         6 - Search authors by name
+        7 - Top 10 most downloaded books
         0 - Exit
         """;
       System.out.println(menu);
@@ -68,6 +73,9 @@ public class Main {
         case 6:
           searchAuthorsByName();
           break;
+        case 7:
+          top10MostDownloadedBooks();
+          break;
         case 0:
           System.out.println("Closing application");
           break;
@@ -86,23 +94,28 @@ public class Main {
       .findFirst()
       .orElse(null);
   }
-  private void saveBook() {
+  @Transactional
+  public void saveBook() {
     BookData data = searchBook();
     Optional<Book> existingBook = repository.findBookByTitle(data.title());
     if (existingBook.isPresent()) {
       System.out.println("Book already exists in the database: " + existingBook.get().getTitle());
-    }
-
-//    Optional<Authors> author = authorRepository.findAuthorByName(data.authors().toString());
-//    Book book = new Book(bookData);
-
-
-    else {
+    } else {
       Book book = new Book(data);
-      data.authors().forEach(authorData -> {
-        Authors author = new Authors(authorData.name(), authorData.birthYear(), authorData.deathYear());
-        book.getAuthors().add(author);
-      });
+      List<Authors> authors = authorRepository.findAuthorsByName(data.authors().get(0).name());
+      if (!authors.isEmpty()) {
+        authors.forEach(author -> {
+          Authors managedAuthor = entityManager.merge(author);
+          System.out.println(managedAuthor);
+          book.getAuthors().add(managedAuthor);
+        });
+      } else {
+        data.authors().forEach(authorData -> {
+          Authors author = new Authors(authorData.name(), authorData.birthYear(), authorData.deathYear());
+          book.getAuthors().add(author);
+        });
+      }
+
       repository.save(book);
       System.out.println(data);
     }
@@ -167,7 +180,7 @@ public class Main {
 
   public void listBooksByLanguage() {
     System.out.println("Enter a language by which you want to search for books");
-    System.out.println("en - English\nes - Spanish\nfr - French\npt - Portuguese");
+    System.out.println("en - English\nes - Spanish\nfr - French\npt - Portuguese\nde - German");
     var languageCode = scanner.nextLine().trim();
 
     try {
@@ -181,5 +194,12 @@ public class Main {
     } catch (IllegalArgumentException e) {
       System.out.println(e.getMessage());
     }
+  }
+
+  private void top10MostDownloadedBooks() {
+    Pageable pageable = PageRequest.of(0, 10);
+    book = repository.findBooksOrderedByDownloadCount(pageable);
+    book.forEach(b -> System.out.printf("\nTitle: %s",
+      b.getTitle()));
   }
 }

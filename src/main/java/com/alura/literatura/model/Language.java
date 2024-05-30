@@ -5,7 +5,8 @@ public enum Language {
   ES("es"),
   FR("fr"),
   PT("pt"),
-  TL("tl");
+  TL("tl"),
+  DE("de");
 
   private String code;
 
