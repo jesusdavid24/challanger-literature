@@ -1,8 +1,6 @@
 # Alura literature
 
 ## Overview
-
-## Overview
 Alura Literatura is a Java-based application designed to manage and query a database of books and authors. 
 It interfaces with the Gutenberg Project via `https://gutendex.com/books` to fetch book data and supports 
 various operations such as searching, listing, and tracking the most downloaded books.
