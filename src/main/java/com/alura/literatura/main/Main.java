@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class Main {
@@ -94,15 +95,24 @@ public class Main {
       .findFirst()
       .orElse(null);
   }
+
   @Transactional
   public void saveBook() {
     BookData data = searchBook();
+
+    if (data == null) {
+      System.out.println("Book not found");
+      return;
+    }
+
     Optional<Book> existingBook = repository.findBookByTitle(data.title());
+
     if (existingBook.isPresent()) {
       System.out.println("Book already exists in the database: " + existingBook.get().getTitle());
     } else {
       Book book = new Book(data);
       List<Authors> authors = authorRepository.findAuthorsByName(data.authors().get(0).name());
+
       if (!authors.isEmpty()) {
         authors.forEach(author -> {
           Authors managedAuthor = entityManager.merge(author);
@@ -117,7 +127,21 @@ public class Main {
       }
 
       repository.save(book);
-      System.out.println(data);
+      System.out.println("========================================");
+      System.out.println("Book entered in the database");
+      System.out.printf("Title: %s\n", data.title());
+
+      System.out.print("Authors: ");
+      data.authors().forEach(author ->
+        System.out.printf("%s (%s - %s); ", author.name(), author.birthYear(), author.deathYear()));
+      System.out.println();
+
+      System.out.print("Languages: ");
+      data.languages().forEach(language -> System.out.printf("%s ", language));
+      System.out.println();
+
+      System.out.printf("Download: %s\n", data.downloadCount());
+      System.out.println("========================================");
     }
   }
 
@@ -128,26 +152,45 @@ public class Main {
     List<Authors> authors = authorRepository.findAuthorsByName(nameAuthor);
     if (!authors.isEmpty()) {
       Authors author = authors.get(0);
-      System.out.println(author.getName());
+      System.out.println("========================================");
+      System.out.println("Name author: " + author.getName());
+      System.out.println("Year of birth: " + author.getBirthYear());
+      System.out.println("Year of death: " + author.getDeathYear());
+      System.out.println("========================================");
     } else {
       System.out.println("Authors not found");
     }
   }
   private void searchAllBook() {
     book = repository.findAllBook();
-    book.forEach(b -> System.out.printf("Title: %s - Authors: %s - Languages: %s - DownloadCount: %s\n",
-      b.getTitle(), b.getAuthors(), b.getLanguages(), b.getDownloadCount()));
-  }
+    book.forEach(b -> {
+      System.out.printf("Title: %s\n", b.getTitle());
 
+      System.out.print("Authors: ");
+      b.getAuthors().forEach(author ->
+        System.out.printf("%s (%s - %s); ", author.getName(), author.getBirthYear(), author.getDeathYear()));
+      System.out.println();
+
+      System.out.print("Languages: ");
+      b.getLanguages().forEach(language -> System.out.printf("%s ", language));
+      System.out.println();
+
+      System.out.printf("DownloadCount: %s\n", b.getDownloadCount());
+
+      System.out.println("========================================");
+    });
+  }
   public void listAuthors() {
     authors = repository.findAllAuthors();
     for (Authors author : authors) {
-      System.out.printf("Name: %s - BirthYear: %s - DeathYear: %s\n",
-        author.getName(), author.getBirthYear(), author.getDeathYear());
+      System.out.println("========================================");
+      System.out.println("Name author: " + author.getName());
+      System.out.println("Year of birth: " + author.getBirthYear());
+      System.out.println("Year of death: " + author.getDeathYear());
       List<Book> books = author.getBooks();
       if (books != null && !books.isEmpty()) {
         for (Book book : books) {
-          System.out.printf("  - Book Title: %s\n", book.getTitle());
+          System.out.printf("Book Title: %s\n", book.getTitle());
         }
       } else {
         System.out.println("  - No books found.");
@@ -163,12 +206,14 @@ public class Main {
     authors = repository.findAuthorsAliveInYear(livingYear);
     if (!authors.isEmpty()) {
       authors.forEach(a -> {
-        System.out.printf("Name: %s - BirthYear: %s - DeathYear: %s\n",
-          a.getName(), a.getBirthYear(), a.getDeathYear());
+        System.out.println("========================================");
+        System.out.println("Name author: " + a.getName());
+        System.out.println("Year of birth: " + a.getBirthYear());
+        System.out.println("Year of death: " + a.getDeathYear());
 
         List<Book> books = a.getBooks();
         if (books != null && !books.isEmpty()) {
-          books.forEach(b -> System.out.printf("  - Book Title: %s\n", b.getTitle()));
+          books.forEach(b -> System.out.printf("4Book Title: %s\n", b.getTitle()));
         } else {
           System.out.println("  - No books found.");
         }
@@ -187,7 +232,22 @@ public class Main {
       Language language = Language.fromCode(languageCode);
       List<Book> books = repository.findBookByLanguage(language);
       if (books != null && !books.isEmpty()) {
-        books.forEach(book -> System.out.println(book.toString()));
+        books.forEach(b -> {
+          System.out.printf("Title: %s\n", b.getTitle());
+
+          System.out.print("Authors: ");
+          b.getAuthors().forEach(author ->
+            System.out.printf("%s (%s - %s); ", author.getName(), author.getBirthYear(), author.getDeathYear()));
+          System.out.println();
+
+          System.out.print("Languages: ");
+          b.getLanguages().forEach(l -> System.out.printf("%s ", l));
+          System.out.println();
+
+          System.out.printf("DownloadCount: %s\n", b.getDownloadCount());
+
+          System.out.println("========================================");
+        });
       } else {
         System.out.println("No books found.");
       }
@@ -198,8 +258,13 @@ public class Main {
 
   private void top10MostDownloadedBooks() {
     Pageable pageable = PageRequest.of(0, 10);
-    book = repository.findBooksOrderedByDownloadCount(pageable);
-    book.forEach(b -> System.out.printf("\nTitle: %s",
-      b.getTitle()));
+    List<Book> books = repository.findBooksOrderedByDownloadCount(pageable);
+    final AtomicInteger counter = new AtomicInteger(1);
+
+    books.forEach(b -> {
+      int index = counter.getAndIncrement();
+      System.out.printf("%d. Title: %s\n", index, b.getTitle());
+    });
   }
+
 }
